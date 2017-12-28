@@ -1,4 +1,4 @@
-      #+TITLE: DF's Emacs.d Config
+#+TITLE: DF's Emacs.d Config
 * Personal Info
   #+BEGIN_SRC emacs-lisp
     (setq user-full-name "Wong Ding Feng"
@@ -15,7 +15,6 @@
       (require 'cl)
       (require 'use-package)
       (require 'bind-key)
-      (require 'diminish)
       (setq use-package-always-ensure t)
       (setq use-package-verbose t)
       )
@@ -331,12 +330,6 @@
    #+BEGIN_SRC emacs-lisp
    (use-package org-gcal
    :ensure t)
-   #+END_SRC
-** Org Latex
-   #+BEGIN_SRC emacs-lisp
-     (setq org-format-latex-options (plist-put org-format-latex-options :scale 1.5))
-     (org-link-set-parameters "id"
-			      :complete 'org-id-complete-link)
    #+END_SRC
 ** Neotree
    #+BEGIN_SRC emacs-lisp
