@@ -11,13 +11,13 @@
       (package-refresh-contents)
       (package-install 'use-package))
 
-    (eval-and-compile(defvar use-package-verbose t) 
+    (eval-and-compile
+      (setq use-package-verbose t) 
       (require 'cl)
       (require 'use-package)
       (require 'bind-key)
       (setq use-package-always-ensure t)
-      (setq use-package-verbose t)
-      )
+      (setq use-package-verbose t))
   #+END_SRC
 * Evil mode 
   I use evil
