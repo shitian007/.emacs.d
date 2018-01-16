@@ -1,31 +1,345 @@
+CONFIG.ORG -*- mode: org -*-
 #+TITLE: DF's Emacs.d Config
-* Personal Info
+#+AUTHOR: Wong Ding Feng
+#+EMAIL: dingfengwong@gmail.com
+* Setup
   #+BEGIN_SRC emacs-lisp
-    (setq user-full-name "Wong Ding Feng"
-	  user-mail-address "dfwong5566@gmail.com")
-  #+END_SRC    
-* Init
+    (require 'package)
+    (setq package-archives '(("org" . "http://orgmode.org/elpa/")
+			     ("gnu" . "http://elpa.gnu.org/packages/")
+			     ("melpa"     . "http://melpa.org/packages/")
+			     ("marmalade" . "http://marmalade-repo.org/packages/")))
+    (package-initialize)
+    ;;(package-refresh-contents)
+  #+END_SRC
+* Use-Package
   Use-package is a better package manager
   #+BEGIN_SRC emacs-lisp
     (unless (package-installed-p 'use-package)
       (package-refresh-contents)
       (package-install 'use-package))
-
-    (eval-and-compile
-      (setq use-package-verbose t) 
-      (require 'cl)
-      (require 'use-package)
-      (require 'bind-key)
-      (setq use-package-always-ensure t)
-      (setq use-package-verbose t))
+    (setq use-package-verbose t)
+    (setq use-package-always-ensure t)
+    (require 'use-package)
   #+END_SRC
-* Evil mode 
+* Init File Support
+  Load up a collection of enhancements to Emacs Lisp, including [[https://github.com/magnars/dash.el][dash]],
+  [[https://github.com/magnars/s.el][s]] for string manipulation, and [[https://github.com/rejeep/f.el][f]] for file manipulation.
+  #+BEGIN_SRC emacs-lisp
+    (require 'cl)
+    (use-package dash
+      :ensure t
+      :config (eval-after-load "dash" '(dash-enable-font-lock)))
+    (use-package s)
+    (use-package f)
+   #+END_SRC
+* misc variable
+  #+BEGIN_SRC emacs-lisp
+    (fset 'yes-or-no-p 'y-or-n-p)
+    (setq scroll-conservatively 10000
+	  scroll-preserve-screen-position t)
+  #+END_SRC
+* Personal Info
+  #+BEGIN_SRC emacs-lisp
+    (setq user-full-name "Wong Ding Feng"
+	  user-mail-address "dfwong5566@gmail.com")
+  #+END_SRC    
+* COMMENT Evil mode 
   I use evil
   [[https:blog.aaronbieber.com/2016/01/23/living-in-evil.html][more evil configs]]
   #+BEGIN_SRC emacs-lisp
   (use-package evil
 	     :config
 	     (evil-mode 1))
+  #+END_SRC
+* Tabs
+  #+BEGIN_SRC emacs-lisp
+    (setq-default indent-tabs-mode nil)
+    (setq tab-width 2)
+    (setq-default tab-always-indent 'complete)
+  #+END_SRC
+* Which-key
+  #+BEGIN_SRC emacs-lisp
+    (use-package which-key
+      :diminish which-key-mode
+      :config
+
+      ;; Replacements for how KEY is replaced when which-key displays
+      ;;   KEY → FUNCTION
+      ;; Eg: After "C-c", display "right → winner-redo" as "▶ → winner-redo"
+      (setq which-key-key-replacement-alist
+            '(("<\\([[:alnum:]-]+\\)>" . "\\1")
+              ("left"                  . "◀")
+              ("right"                 . "▶")
+              ("up"                    . "▲")
+              ("down"                  . "▼")
+              ("delete"                . "DEL") ; delete key
+              ("\\`DEL\\'"             . "BS") ; backspace key
+              ("next"                  . "PgDn")
+              ("prior"                 . "PgUp"))
+
+            ;; List of "special" keys for which a KEY is displayed as just
+            ;; K but with "inverted video" face... not sure I like this.
+            which-key-special-keys '("RET" "DEL" ; delete key
+                                     "ESC" "BS" ; backspace key
+                                     "SPC" "TAB")
+
+            ;; Replacements for how part or whole of FUNCTION is replaced:
+            which-key-description-replacement-alist
+            '(("Prefix Command" . "prefix")
+              ("\\`calc-"       . "") ; Hide "calc-" prefixes when listing M-x calc keys
+              ("\\`projectile-" . "𝓟/")
+              ("\\`org-babel-"  . "ob/"))
+
+            ;; Underlines commands to emphasize some functions:
+            which-key-highlighted-command-list
+            '("\\(rectangle-\\)\\|\\(-rectangle\\)"
+              "\\`org-"))
+ 
+      ;; Change what string to display for a given *complete* key binding
+      ;; Eg: After "C-x", display "8 → +unicode" instead of "8 → +prefix"
+      (which-key-add-key-based-replacements
+        "C-x 8"   "unicode"
+        "C-c T"   "toggles-"
+        "C-c p s" "projectile-search"
+        "C-c p 4" "projectile-other-buffer-"
+        "C-x a"   "abbrev/expand"
+        "C-x r"   "rect/reg"
+        "C-c /"   "engine-mode-map"
+        "C-c C-v" "org-babel")
+
+      (which-key-mode 1))
+  #+END_SRC
+* macrostep
+  #+BEGIN_SRC emacs-lisp
+    (use-package macrostep)
+  #+END_SRC
+* Core Utilities
+* Hydra
+  #+begin_src emacs-lisp
+    (use-package hydra)
+  #+end_src
+* Ivy
+  I've recently switched over from =helm= to =ivy=. Ivy is simpler, and easier to extend.
+** flx
+   Flx is required for fuzzy-matching.
+   #+begin_src emacs-lisp
+     (use-package flx)
+   #+end_src
+** Fuzzy Isearch
+   #+BEGIN_SRC emacs-lisp
+     (use-package flx-isearch
+       :bind (:map jethro-mode-map
+		   ("C-M-s" . flx-isearch-forward)
+		   ("C-M-r" . flx-isearch-backward)))
+   #+END_SRC
+** Counsel
+     Counsel contains ivy enhancements for commonly-used functions.
+     #+begin_src emacs-lisp
+       (use-package counsel
+         :diminish ivy-mode
+         :bind*
+         (("C-c C-r" . ivy-resume)
+          ("C-s" . counsel-grep-or-swiper)
+          ("C-r" . counsel-grep-or-swiper)
+          ("C-c i" . counsel-imenu)
+          ("C-x b" . ivy-switch-buffer)
+          ("C-x k" . kill-buffer)
+          ("C-x C-f" . counsel-find-file)
+          ("C-x j" . counsel-dired-jump)
+          ("C-x l" . counsel-locate)
+          ("C-c j" . counsel-git)
+          ("C-c f" . counsel-recentf)
+          ("M-y" . counsel-yank-pop))
+         :bind (:map help-map
+                     ("f" . counsel-describe-function)
+                     ("v" . counsel-describe-variable)
+                     ("l" . counsel-info-lookup-symbol)
+                     :map ivy-minibuffer-map
+                     ("C-d" . ivy-dired)
+                     ("C-o" . ivy-occur)
+                     ("<return>" . ivy-alt-done)
+                     ("M-<return>" . ivy-immediate-done)
+                     :map read-expression-map
+                     ("C-r" . counsel-expression-history))
+         :init
+         (add-hook 'after-init-hook 'ivy-mode)
+         :config
+         (setq counsel-grep-swiper-limit 20000)
+         (setq counsel-grep-base-command
+               "rg -i -M 120 --no-heading --line-number --color never '%s' %s")
+         (setq counsel-find-file-at-point t)
+         (setq ivy-use-virtual-buffers t)
+         ;; fancy by default
+         (setq ivy-display-style 'fancy)
+         ;; can i disable this ? (setq ivy-initial-inputs-alist nil)
+         (setq ivy-use-selectable-prompt t)
+         (setq ivy-re-builders-alist
+               '((ivy-switch-buffer . ivy--regex-plus)
+                 (swiper . ivy--regex-plus)
+                 (t . ivy--regex-fuzzy))) 
+         (ivy-set-actions
+          t
+          '(("I" insert "insert")))
+         (ivy-set-occur 'ivy-switch-buffer 'ivy-switch-buffer-occur))
+ #+END_SRC
+* rg
+  #+BEGIN_SRC emacs-lisp
+    (use-package rg
+      :bind (("M-s" . rg)))
+  #+END_SRC
+* undo
+  #+BEGIN_SRC emacs-lisp
+    (use-package undo-tree
+      :ensure t
+      :diminish undo-tree-mode
+      :init
+      (global-undo-tree-mode 1)
+      :config
+      (defalias 'redo 'undo-tree-redo)
+      :bind (("C-z" . undo)     ; Zap to character isn't helpful
+             ("C-S-z" . redo)))
+  #+END_SRC
+* ace window
+  #+BEGIN_SRC emacs-lisp
+    (use-package ace-window
+      :ensure t
+      :init
+      ;; set windows keys a s d ...
+      (setq aw-keys '(?a ?s ?d ?f ?j ?k ?l ?o))
+      (global-set-key (kbd "C-x o") 'ace-window)
+      :diminish ace-window-mode)
+  #+END_SRC
+* expand-region
+  #+BEGIN_SRC emacs-lisp
+    (use-package expand-region
+      :ensure t
+      :config
+      (defun ha/expand-region (lines)
+        "Prefix-oriented wrapper around Magnar's `er/expand-region'.
+
+    Call with LINES equal to 1 (given no prefix), it expands the
+    region as normal.  When LINES given a positive number, selects
+    the current line and number of lines specified.  When LINES is a
+    negative number, selects the current line and the previous lines
+    specified.  Select the current line if the LINES prefix is zero."
+        (interactive "p")
+        (cond ((= lines 1)   (er/expand-region 1))
+              ((< lines 0)   (ha/expand-previous-line-as-region lines))
+              (t             (ha/expand-next-line-as-region (1+ lines)))))
+
+      (defun ha/expand-next-line-as-region (lines)
+        (message "lines = %d" lines)
+        (beginning-of-line)
+        (set-mark (point))
+        (end-of-line lines))
+
+      (defun ha/expand-previous-line-as-region (lines)
+        (end-of-line)
+        (set-mark (point))
+        (beginning-of-line (1+ lines)))
+
+      :bind ("C-=" . ha/expand-region))
+  #+END_SRC
+* wrap-region
+  #+BEGIN_SRC emacs-lisp
+    (use-package wrap-region
+      :ensure   t
+      :config
+      (wrap-region-global-mode t)
+      (wrap-region-add-wrappers
+       '(("(" ")")
+         ("[" "]")
+         ("{" "}")
+         ("<" ">")
+         ("'" "'")
+         ("\"" "\"")
+         ("‘" "’"   "q")
+         ("“" "”"   "Q")
+         ("*" "*"   "b"   org-mode)                 ; bolden
+         ("*" "*"   "*"   org-mode)                 ; bolden
+         ("/" "/"   "i"   org-mode)                 ; italics
+         ("/" "/"   "/"   org-mode)                 ; italics
+         ("~" "~"   "c"   org-mode)                 ; code
+         ("~" "~"   "~"   org-mode)                 ; code
+         ("=" "="   "v"   org-mode)                 ; verbatim
+         ("=" "="   "="   org-mode)                 ; verbatim
+         ("_" "_"   "u" '(org-mode markdown-mode))  ; underline
+         ("**" "**" "b"   markdown-mode)            ; bolden
+         ("*" "*"   "i"   markdown-mode)            ; italics
+         ("`" "`"   "c" '(markdown-mode ruby-mode)) ; code
+         ("`" "'"   "c"   lisp-mode)                ; code
+         ))
+      :diminish wrap-region-mode)
+  #+END_SRC
+* Projectile
+  #+BEGIN_SRC emacs-lisp
+    (use-package projectile
+      :demand t
+      :init
+      (setq projectile-keymap-prefix (kbd "C-x p"))
+      :config
+      (require 'projectile)
+      (projectile-global-mode)
+      (use-package counsel-projectile
+        :bind (("s-f" . counsel-projectile-find-file)
+               ("s-b" . counsel-projectile-switch-to-buffer)
+               ("C-c s" . jethro/counsel-projectile-rg))
+        :config
+        (defun jethro/counsel-projectile-rg (&optional options)
+          "Ivy version of `projectile-rg'."
+          (interactive)
+          (if (projectile-project-p)
+              (let* ((options
+                      (if current-prefix-arg
+                          (read-string "options: ")
+                        options))
+                     (ignored
+                      (unless (eq (projectile-project-vcs) 'git)
+                        ;; rg supports git ignore files
+                        (append
+                         (cl-union (projectile-ignored-files-rel) grep-find-ignored-files)
+                         (cl-union (projectile-ignored-directories-rel) grep-find-ignored-directories))))
+                     (options
+                      (concat options " "
+                              (mapconcat (lambda (i)
+                                           (concat "--ignore-file " (shell-quote-argument i)))
+                                         ignored
+                                         " "))))
+                (counsel-rg (ivy-thing-at-point)
+                            (projectile-project-root)
+                            options
+                            (projectile-prepend-project-name "rg")))
+            (user-error "You're not in a project")))
+        (counsel-projectile-on))
+      (setq projectile-use-git-grep t)
+      (setq projectile-create-missing-test-files t)
+      (setq projectile-completion-system 'ivy)
+
+      (setq projectile-switch-project-action
+            #'projectile-commander)
+      (def-projectile-commander-method ?S
+        "Run a search in the project"
+        (counsel-projectile-rg))
+      (def-projectile-commander-method ?s
+        "Open a *eshell* buffer for the project."
+        (projectile-run-eshell))
+      (def-projectile-commander-method ?d
+        "Open project root in dired."
+        (projectile-dired))
+      (def-projectile-commander-method ?g
+        "Show magit status."
+        (magit-status))
+      (def-projectile-commander-method ?j
+        "Jack-in."
+        (let* ((opts (projectile-current-project-files))
+               (file (ivy-read
+                      "Find file: " 
+                      opts)))
+          (find-file (expand-file-name
+                      file (projectile-project-root)))
+          (run-hooks 'projectile-find-file-hook)
+          (cider-jack-in))))
   #+END_SRC
 * Settings
 ** Sexifying, Theming
@@ -62,7 +376,6 @@
      ;;(set-face-attribute 'default nil :font "DejaVu Sans Mono-11" )
      ;;(set-frame-font "DejaVu Sans Mono-11" nil t)
    #+END_SRC
-** Desktop mode
 ** Emacs Server
    Load the emacs server, if it is not running. This allows for almost-instant emacs "startup".
    #+BEGIN_SRC emacs-lisp
@@ -70,7 +383,7 @@
      (unless (server-running-p)
        (server-start))
    #+END_SRC
-  
+** Desktop mode
    #+BEGIN_SRC emacs-lisp
      (desktop-save-mode 1)
    #+END_SRC
@@ -87,126 +400,6 @@
      (add-hook 'focus-out-hook
 	       (lambda () (save-some-buffers t)))
    #+END_SRC
-* A copy of jethro mode
-  #+BEGIN_SRC emacs-lisp
-    (defvar d-mode-map (make-sparse-keymap)
-      "Keymap for `d-mode'.")
-
-    (define-minor-mode d-mode
-      "A minor mode so that my key settings override annoying major modes."
-      ;; If init-value is not set to t, this mode does not get enabled in
-      ;; `fundamental-mode' buffers even after doing \"(global-d-mode 1)\".
-      ;; More info: http://emacs.stackexchange.com/q/16693/115
-      :init-value t
-      :lighter    " d"
-      :keymap     d-mode-map)
-
-    (define-globalized-minor-mode global-d-mode d-mode d-mode)
-
-    (add-to-list 'emulation-mode-map-alists `((d-mode . ,d-mode-map)))
-
-    ;; Turn off the minor mode in the minibuffer
-    (defun turn-off-d-mode ()
-      "Turn off d-mode."
-      (d-mode -1))
-
-    (add-hook 'minibuffer-setup-hook #'turn-off-d-mode)
-  #+END_SRC
-* Core Utilities
-** Dash
-   Dash is a library used to simplify Emacs-lisp development. Some custom elisp code use Dash, so I load it first here anyway.
-   #+BEGIN_SRC emacs-lisp
-     (use-package dash)
-   #+END_SRC
-** Hydra
-   #+begin_src emacs-lisp
-     (use-package hydra)
-   #+end_src
-** Ivy
-   I've recently switched over from =helm= to =ivy=. Ivy is simpler, and easier to extend.
-*** flx
-    Flx is required for fuzzy-matching.
-    #+begin_src emacs-lisp
-      (use-package flx)
-    #+end_src
-*** Fuzzy Isearch
-    #+BEGIN_SRC emacs-lisp
-      (use-package flx-isearch
-	:bind (:map jethro-mode-map
-		    ("C-M-s" . flx-isearch-forward)
-		    ("C-M-r" . flx-isearch-backward)))
-    #+END_SRC
-*** Counsel
-    Counsel contains ivy enhancements for commonly-used functions.
-    #+begin_src emacs-lisp
-      (use-package counsel
-	:diminish ivy-mode
-	:bind
-	(:map d-mode-map
-	      ("C-c C-r" . ivy-resume)
-	      ("M-a" . counsel-M-x)
-	      ("C-d" . counsel-grep)
-	      ("C-s" . swiper)
-	      ("C-c i" . counsel-imenu)
-	      ("C-x C-f" . counsel-find-file)
-	      ("C-x j" . counsel-dired-jump)
-	      ("C-x l" . counsel-locate)
-	      ("C-c j" . counsel-git)
-	      ("C-c f" . counsel-recentf)
-	      ("M-y" . counsel-yank-pop)
-	      :map swiper-map
-	      ("C-r" . ivy-previous-line)
-	      :map help-map
-	      ("f" . counsel-describe-function)
-	      ("v" . counsel-describe-variable)
-	      ("l" . counsel-info-lookup-symbol)
-	      :map ivy-minibuffer-map
-	      ("C-d" . ivy-dired)
-	      ("C-o" . ivy-occur)
-	      ("<return>" . ivy-alt-done)
-	      ("M-<return>" . ivy-immediate-done)
-	      :map read-expression-map
-	      ("C-r" . counsel-expression-history))
-	:init
-	(add-hook 'after-init-hook 'ivy-mode)
-	:config
-	(setq counsel-grep-swiper-limit 20000)
-	(defun ivy-dired ()
-	  (interactive)
-	  (if ivy--directory
-	      (ivy-quit-and-run
-	       (dired ivy--directory)
-	       (when (re-search-forward
-		      (regexp-quote
-		       (substring ivy--current 0 -1)) nil t)
-		 (goto-char (match-beginning 0))))
-	    (user-error
-	     "Not completing files currently")))
-	(setq counsel-grep-base-command
-	      "rg -i -M 120 --no-heading --line-number --color never '%s' %s")
-	(setq counsel-find-file-at-point t)
-	(setq ivy-use-virtual-buffers t)
-	(setq ivy-display-style 'fancy)
-	(setq ivy-initial-inputs-alist nil)
-	(setq ivy-re-builders-alist
-	      '((ivy-switch-buffer . ivy--regex-plus)
-		(swiper . ivy--regex-plus)
-		(t . ivy--regex-fuzzy))) 
-	(ivy-set-actions
-	 t
-	 '(("I" insert "insert"))))
-    #+end_src
-*** wgrep
-    #+BEGIN_SRC emacs-lisp
-      (use-package wgrep)
-    #+END_SRC
-*** rg
-    #+BEGIN_SRC emacs-lisp
-      (use-package rg
-	:bind (:map d-mode-map
-		    ("M-s" . rg)))
-    #+END_SRC
-    ;;* Search
 * Shell
   #+BEGIN_SRC emacs-lisp
     (require 'eshell)
@@ -219,6 +412,7 @@
    #+end_src
 ** Add PATH to shell
    #+begin_src emacs-lisp
+     A GNU Emacs library to ensure environment variables inside Emacs look the same as in the user's shell.
      (use-package exec-path-from-shell 
        :config
        (exec-path-from-shell-initialize))
@@ -246,23 +440,23 @@
      passed, use the buffer's directory."
        (interactive) 
        (let* ((projectile-name (projectile-project-name))
-	      (current-directory (car
-				  (last
-				   (split-string
-				    (if (buffer-file-name)
-					(file-name-directory (buffer-file-name))
-				      default-directory) "/" t)))))
-	 (split-window-vertically)
-	 (other-window 1)
-	 (if (equal projectile-name "-")
-	     (progn
-	       (eshell "new")
-	       (rename-buffer (concat "*eshell: " current-directory "*")))
-	   (projectile-with-default-dir (projectile-project-root)
-	     (eshell "new")
-	     (rename-buffer (concat "*eshell: " projectile-name "*"))))))
+              (current-directory (car
+                                  (last
+                                   (split-string
+                                    (if (buffer-file-name)
+                                        (file-name-directory (buffer-file-name))
+                                      default-directory) "/" t)))))
+         (split-window-vertically)
+         (other-window 1)
+         (if (equal projectile-name "-")
+             (progn
+               (eshell "new")
+               (rename-buffer (concat "*eshell: " current-directory "*")))
+           (projectile-with-default-dir (projectile-project-root)
+             (eshell "new")
+             (rename-buffer (concat "*eshell: " projectile-name "*"))))))
 
-     (bind-key "C-x m" 'd/eshell-here d-mode-map)
+     (bind-key "C-x m" 'd/eshell-here)
    #+END_SRC
 ** Exiting eshell
    #+BEGIN_SRC emacs-lisp
@@ -271,41 +465,30 @@
 	 (delete-window))
        (eshell/exit))
    #+END_SRC
-** Quitting Eshell
-   #+BEGIN_SRC emacs-lisp
-     (defun eshell/x ()
-       (delete-window)
-       (eshell/exit))
-   #+END_SRC
 ** Isearch
    #+BEGIN_SRC emacs-lisp
      (bind-key "C-s" 'eshell-isearch-forward eshell-mode-map)
      (bind-key "C-r" 'eshell-isearch-backward eshell-mode-map)
    #+END_SRC
-** with-editor
-   Use =with-editor= to use current Emacs to open everything that invokes =$EDITOR=.
-   #+BEGIN_SRC emacs-lisp
-     (use-package with-editor
-       :ensure t
-       :init
-       (progn
-	 (add-hook 'shell-mode-hook  'with-editor-export-editor)
-	 (add-hook 'eshell-mode-hook 'with-editor-export-editor)))
-   #+END_SRC
 * Org Stuff
-** Org bullet
-   add some sex to bullets
+** Org agenda mode
    #+BEGIN_SRC emacs-lisp
-   (add-hook 'org-mode-hook
-	   (lambda ()
-	     (org-bullets-mode t)))
+
+   #+END_SRC
+** Org bullet
+   #+BEGIN_SRC emacs-lisp
+     (use-package org-bullets
+       :config
+       (add-hook 'org-mode-hook
+                 (lambda ()
+                   (org-bullets-mode t))))
    #+END_SRC
 ** Org Org
    #+BEGIN_SRC emacs-lisp
      (setq org-log-done 'time)
      (setq org-log-done 'done)
-     (setq user-init-file "~/.emacs.d/config.org")
      (setq org-src-tab-acts-natively t)
+     (set-default 'truncate-lines t)
      (defun my-org-screenshot ()
        "Take a screenshot into a time stamped unique-named file in the
      same directory as the org-buffer and insert a link to this file."
@@ -319,53 +502,32 @@
      (call-process "import" nil nil nil filename)
      (insert (concat "[[" filename "]]"))
      (org-display-inline-images))
-     (set-default 'truncate-lines t)
-   #+END_SRC
-** Org preview html
-   #+BEGIN_SRC emacs-lisp
-   (use-package org-preview-html
-   :ensure t)
-   #+END_SRC
-** Org gcal
-   #+BEGIN_SRC emacs-lisp
-   (use-package org-gcal
-   :ensure t)
    #+END_SRC
 ** Neotree
    #+BEGIN_SRC emacs-lisp
-     ;;(use-package neotree
-     ;;  :ensure t
-     ;;  :config
-     ;;  (global-set-key [f8] 'neotree-toggle))
+     (use-package neotree
+       :ensure t
+       :config
+       (global-set-key [f8] 'neotree-toggle))
    #+END_SRC
-** Org Babel
+** Org Babel languages
    #+BEGIN_SRC emacs-lisp
      (org-babel-do-load-languages
       'org-babel-load-languages
       '((C . t)
         (lisp . t)
         (python . t)))
-     (use-package htmlize
-       :ensure t)
    #+END_SRC
 ** Org Mode for Note taking
 *** Deft
     #+BEGIN_SRC emacs-lisp
       (use-package deft
-        :bind
-        (:map d-mode-map
-              ("C-c n" . deft))
-        :config
-        ;;(setq deft-extensions '("org" ".org.gpg"))
-        (setq deft-default-extension "org")
-        (setq deft-use-filename-as-title t)
-        (setq deft-use-filter-string-for-filename t))
-    #+END_SRC
-*** Exporting Deft Notes
-    #+BEGIN_SRC emacs-lisp
-      (defun d/org-export-deft-file (file)
-        (interactive)
-        (org-html-export-to-html t t))
+	:config
+	(setq deft-default-extension '("org" "txt"))
+	(setq deft-directory "~/df/notes/deft")
+	(setq deft-recursive t)
+	(setq deft-use-filename-as-title t)
+	(setq deft-use-filter-string-for-filename t))
     #+END_SRC
 ** Org export column
    #+BEGIN_SRC emacs-lisp
@@ -493,12 +655,6 @@
 	    ((?l "Export to LaTeX" d/org-multicol-to-latex)
 	     (?p "Export to PDF" d/org-multicol-to-pdf))))
    #+END_SRC
-* Which-key
-#+BEGIN_SRC emacs-lisp
-(use-package which-key
-  :init
-  (which-key-mode))
-#+END_SRC
 * relative
 #+BEGIN_SRC emacs-lisp
   (use-package linum-relative
@@ -508,3 +664,14 @@
     (setq linum-relative-current-symbol "")
     )
 #+END_SRC
+* yaml-mode
+  #+BEGIN_SRC emacs-lisp
+    (use-package yaml-mode)
+  #+END_SRC
+* emacs dashboard
+  #+BEGIN_SRC emacs-lisp
+    (use-package dashboard
+      :config
+      (dashboard-setup-startup-hook))
+  #+END_SRC
+  
