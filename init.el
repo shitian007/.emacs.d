@@ -14,7 +14,7 @@
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
    (quote
-    (macrostep org-bullets org-bullet auctex wrap-region f yaml-mode with-editor which-key wgrep use-package rg powerline org-preview-html org-plus-contrib org-gcal neotree moe-theme linum-relative hydra htmlize flx-isearch exec-path-from-shell evil eshell-git-prompt deft dashboard counsel))))
+    (beacon counsel-gtags company pamparam pamparam-drill mu4e macrostep org-bullets org-bullet auctex wrap-region f yaml-mode with-editor which-key wgrep use-package rg powerline org-preview-html org-plus-contrib org-gcal neotree moe-theme linum-relative hydra htmlize flx-isearch exec-path-from-shell evil eshell-git-prompt deft dashboard counsel))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.

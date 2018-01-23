@@ -44,8 +44,12 @@ CONFIG.ORG -*- mode: org -*-
     (setq user-full-name "Wong Ding Feng"
 	  user-mail-address "dfwong5566@gmail.com")
   #+END_SRC    
-* COMMENT Evil mode 
-  I use evil
+* easypg
+  #+BEGIN_SRC emacs-lisp
+    (use-package epg)
+    (load-file "~/.emacs.d/secrets.el.gpg")
+  #+END_SRC
+* Evil mode 
   [[https:blog.aaronbieber.com/2016/01/23/living-in-evil.html][more evil configs]]
   #+BEGIN_SRC emacs-lisp
   (use-package evil
@@ -63,6 +67,8 @@ CONFIG.ORG -*- mode: org -*-
     (use-package which-key
       :diminish which-key-mode
       :config
+
+      (setq which-key-idle-delay 0.3)
 
       ;; Replacements for how KEY is replaced when which-key displays
       ;;   KEY → FUNCTION
@@ -95,7 +101,7 @@ CONFIG.ORG -*- mode: org -*-
             which-key-highlighted-command-list
             '("\\(rectangle-\\)\\|\\(-rectangle\\)"
               "\\`org-"))
- 
+
       ;; Change what string to display for a given *complete* key binding
       ;; Eg: After "C-x", display "8 → +unicode" instead of "8 → +prefix"
       (which-key-add-key-based-replacements
@@ -114,13 +120,7 @@ CONFIG.ORG -*- mode: org -*-
   #+BEGIN_SRC emacs-lisp
     (use-package macrostep)
   #+END_SRC
-* Core Utilities
-* Hydra
-  #+begin_src emacs-lisp
-    (use-package hydra)
-  #+end_src
 * Ivy
-  I've recently switched over from =helm= to =ivy=. Ivy is simpler, and easier to extend.
 ** flx
    Flx is required for fuzzy-matching.
    #+begin_src emacs-lisp
@@ -138,23 +138,19 @@ CONFIG.ORG -*- mode: org -*-
      #+begin_src emacs-lisp
        (use-package counsel
          :diminish ivy-mode
-         :bind*
+         :bind
          (("C-c C-r" . ivy-resume)
           ("C-s" . counsel-grep-or-swiper)
           ("C-r" . counsel-grep-or-swiper)
           ("C-c i" . counsel-imenu)
           ("C-x b" . ivy-switch-buffer)
           ("C-x k" . kill-buffer)
-          ("C-x C-f" . counsel-find-file)
           ("C-x j" . counsel-dired-jump)
           ("C-x l" . counsel-locate)
           ("C-c j" . counsel-git)
           ("C-c f" . counsel-recentf)
           ("M-y" . counsel-yank-pop))
          :bind (:map help-map
-                     ("f" . counsel-describe-function)
-                     ("v" . counsel-describe-variable)
-                     ("l" . counsel-info-lookup-symbol)
                      :map ivy-minibuffer-map
                      ("C-d" . ivy-dired)
                      ("C-o" . ivy-occur)
@@ -165,6 +161,8 @@ CONFIG.ORG -*- mode: org -*-
          :init
          (add-hook 'after-init-hook 'ivy-mode)
          :config
+         (ivy-mode t)
+         (counsel-mode t)
          (setq counsel-grep-swiper-limit 20000)
          (setq counsel-grep-base-command
                "rg -i -M 120 --no-heading --line-number --color never '%s' %s")
@@ -275,71 +273,17 @@ CONFIG.ORG -*- mode: org -*-
 * Projectile
   #+BEGIN_SRC emacs-lisp
     (use-package projectile
-      :demand t
       :init
-      (setq projectile-keymap-prefix (kbd "C-x p"))
+      ;;(setq projectile-keymap-prefix (kbd "C-x p"))
       :config
-      (require 'projectile)
       (projectile-global-mode)
-      (use-package counsel-projectile
-        :bind (("s-f" . counsel-projectile-find-file)
-               ("s-b" . counsel-projectile-switch-to-buffer)
-               ("C-c s" . jethro/counsel-projectile-rg))
-        :config
-        (defun jethro/counsel-projectile-rg (&optional options)
-          "Ivy version of `projectile-rg'."
-          (interactive)
-          (if (projectile-project-p)
-              (let* ((options
-                      (if current-prefix-arg
-                          (read-string "options: ")
-                        options))
-                     (ignored
-                      (unless (eq (projectile-project-vcs) 'git)
-                        ;; rg supports git ignore files
-                        (append
-                         (cl-union (projectile-ignored-files-rel) grep-find-ignored-files)
-                         (cl-union (projectile-ignored-directories-rel) grep-find-ignored-directories))))
-                     (options
-                      (concat options " "
-                              (mapconcat (lambda (i)
-                                           (concat "--ignore-file " (shell-quote-argument i)))
-                                         ignored
-                                         " "))))
-                (counsel-rg (ivy-thing-at-point)
-                            (projectile-project-root)
-                            options
-                            (projectile-prepend-project-name "rg")))
-            (user-error "You're not in a project")))
-        (counsel-projectile-on))
-      (setq projectile-use-git-grep t)
-      (setq projectile-create-missing-test-files t)
-      (setq projectile-completion-system 'ivy)
+      (setq projectile-completion-system 'ivy))
 
-      (setq projectile-switch-project-action
-            #'projectile-commander)
-      (def-projectile-commander-method ?S
-        "Run a search in the project"
-        (counsel-projectile-rg))
-      (def-projectile-commander-method ?s
-        "Open a *eshell* buffer for the project."
-        (projectile-run-eshell))
-      (def-projectile-commander-method ?d
-        "Open project root in dired."
-        (projectile-dired))
-      (def-projectile-commander-method ?g
-        "Show magit status."
-        (magit-status))
-      (def-projectile-commander-method ?j
-        "Jack-in."
-        (let* ((opts (projectile-current-project-files))
-               (file (ivy-read
-                      "Find file: " 
-                      opts)))
-          (find-file (expand-file-name
-                      file (projectile-project-root)))
-          (run-hooks 'projectile-find-file-hook)
-          (cider-jack-in))))
+    (use-package counsel-projectile)
+  #+END_SRC
+* Magit
+  #+BEGIN_SRC emacs-lisp
+    (use-package magit)
   #+END_SRC
 * Settings
 ** Sexifying, Theming
@@ -412,7 +356,7 @@ CONFIG.ORG -*- mode: org -*-
    #+end_src
 ** Add PATH to shell
    #+begin_src emacs-lisp
-     A GNU Emacs library to ensure environment variables inside Emacs look the same as in the user's shell.
+     ;;A GNU Emacs library to ensure environment variables inside Emacs look the same as in the user's shell.
      (use-package exec-path-from-shell 
        :config
        (exec-path-from-shell-initialize))
@@ -467,13 +411,62 @@ CONFIG.ORG -*- mode: org -*-
    #+END_SRC
 ** Isearch
    #+BEGIN_SRC emacs-lisp
-     (bind-key "C-s" 'eshell-isearch-forward eshell-mode-map)
-     (bind-key "C-r" 'eshell-isearch-backward eshell-mode-map)
+     ;;(bind-key "C-s" 'eshell-isearch-forward eshell-mode-map)
+     ;;(bind-key "C-r" 'eshell-isearch-backward eshell-mode-map)
    #+END_SRC
+* Similar to I3
+  #+BEGIN_SRC emacs-lisp
+    (defadvice split-window (after move-point-to-new-window activate)
+      "Moves the point to the newly created window after splitting."
+      (other-window 1))
+  #+END_SRC
 * Org Stuff
+** Org
+   #+BEGIN_SRC emacs-lisp
+     (use-package org
+       :init
+       ;; boleh tak
+       (defun d/go-to-org ()
+         (interactive) (dired "~/df/org"))
+       (defun d/go-to-school ()
+         (interactive) (dired "~/df/school/y2/s2/notes"))
+       (defun d/go-to-config ()
+         (interactive) (find-file "~/.emacs.d/config.org"))
+       :bind (
+              ("C-c g o" . d/go-to-org)
+              ("C-c g c" . d/go-to-config)
+              ("C-c g s" . d/go-to-school)
+              ("C-c a" . org-agenda-list)
+              ("C-c c" . org-capture)
+              )
+       :config
+       (setq org-agenda-files (list "~/df/org/gcal.org"
+                                    "~/df/org/inbox.org"))
+       (setq org-default-notes-file "~/df/org/inbox.org")
+       (setq org-capture-templates
+             '(("b" "Buy" entry (file+headline "~/df/org/inbox.org" "Buy")
+                "* %?\n%T" :prepend t)
+               ("r" "Reading books" entry (file+headline "~/df/org/inbox.org" "Reading Books")
+                "* %?\n%T" :prepend t)
+               ("m" "minor readings" entry (file+headline "~/df/org/inbox.org" "Minor Reads")
+                "* %?\n%T" :prepend t)
+               ("i" "Ideas" entry (file+headline "~/df/org/inbox.org" "Ideas")
+                "* %?\n%T" :prepend t)
+               ))
+     )
+   #+END_SRC
+** Org Google Calendar
+   #+BEGIN_SRC emacs-lisp
+     (use-package org-gcal
+       :config
+       (setq org-gcal-client-id google-calendar-id
+             org-gcal-client-secret google-calendar-client-secret
+             org-gcal-file-alist '(("dfwong5566@gmail.com" . "~/df/org/gcal.org")))
+       (add-hook 'org-agenda-mode-hook (lambda () (org-gcal-sync) ))
+       (add-hook 'org-capture-after-finalize-hook (lambda () (org-gcal-sync) )))
+   #+END_SRC
 ** Org agenda mode
    #+BEGIN_SRC emacs-lisp
-
    #+END_SRC
 ** Org bullet
    #+BEGIN_SRC emacs-lisp
@@ -659,10 +652,8 @@ CONFIG.ORG -*- mode: org -*-
 #+BEGIN_SRC emacs-lisp
   (use-package linum-relative
     :config
-    (linum-relative-on)
-    (linum-relative-global-mode)
-    (setq linum-relative-current-symbol "")
-    )
+    (add-hook 'text-mode-hook 'linum-relative-on)
+    (setq linum-relative-current-symbol ""))
 #+END_SRC
 * yaml-mode
   #+BEGIN_SRC emacs-lisp
@@ -674,4 +665,67 @@ CONFIG.ORG -*- mode: org -*-
       :config
       (dashboard-setup-startup-hook))
   #+END_SRC
-  
+* pdf-tools
+  #+BEGIN_SRC emacs-lisp
+    (use-package pdf-tools
+        :config
+        (pdf-tools-install)
+        (setq-default pdf-view-display-size 'fit-page)
+        (bind-keys :map pdf-view-mode-map
+            ("\\" . hydra-pdftools/body)
+            ("<s-spc>" .  pdf-view-scroll-down-or-next-page)
+            ("g"  . pdf-view-first-page)
+            ("G"  . pdf-view-last-page)
+            ("l"  . image-forward-hscroll)
+            ("h"  . image-backward-hscroll)
+            ("j"  . pdf-view-next-page)
+            ("k"  . pdf-view-previous-page)
+            ("e"  . pdf-view-goto-page)
+            ("u"  . pdf-view-revert-buffer)
+            ("al" . pdf-annot-list-annotations)
+            ("ad" . pdf-annot-delete)
+            ("aa" . pdf-annot-attachment-dired)
+            ("am" . pdf-annot-add-markup-annotation)
+            ("at" . pdf-annot-add-text-annotation)
+            ("y"  . pdf-view-kill-ring-save)
+            ("i"  . pdf-misc-display-metadata)
+            ("s"  . pdf-occur)
+            ("b"  . pdf-view-set-slice-from-bounding-box)
+            ("r"  . pdf-view-reset-slice))
+         (use-package org-pdfview))
+  #+END_SRC
+* COMMENT email
+  #+BEGIN_SRC emacs-lisp
+    (use-package mu4e)
+  #+END_SRC
+* pamparam
+  #+BEGIN_SRC emacs-lisp
+    (use-package pamparam)
+  #+END_SRC
+* company
+  #+BEGIN_SRC emacs-lisp
+    (use-package company)
+  #+END_SRC
+* gtags
+  #+BEGIN_SRC emacs-lisp
+    (use-package counsel-gtags
+      :config
+      (add-hook 'c-mode-hook 'counsel-gtags-mode)
+      (add-hook 'c++-mode-hook 'counsel-gtags-mode))
+  #+END_SRC
+* beacon mode 
+  #+BEGIN_SRC emacs-lisp
+    (use-package beacon
+      :config
+      (beacon-mode 1))
+  #+END_SRC
+* my functions
+  #+BEGIN_SRC emacs-lisp
+    (defun d/switch-to-minibuffer-window ()
+      "switch to minibuffer window (if active)"
+      (interactive)
+      (when (active-minibuffer-window)
+        (select-window (active-minibuffer-window))))
+
+    (global-set-key (kbd "<f7>") 'd/switch-to-minibuffer-window)
+  #+END_SRC
