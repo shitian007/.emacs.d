@@ -719,6 +719,24 @@ CONFIG.ORG -*- mode: org -*-
       :config
       (beacon-mode 1))
   #+END_SRC
+* Markdown mode
+  #+BEGIN_SRC emacs-lisp
+    (use-package markdown-mode)
+    (add-to-list 'auto-mode-alist '("\\.md\\'" . markdown-mode))
+  #+END_SRC
+* meghanada java
+  #+BEGIN_SRC emacs-lisp
+    (use-package meghanada
+      :config
+      (add-hook 'java-mode-hook
+                (lambda ()
+                  ;; meghanada-mode on
+                  (meghanada-mode t)
+                  (setq c-basic-offset 2)
+                  ;; use code format
+                  (add-hook 'before-save-hook 'meghanada-code-beautify-before-save))))
+
+  #+END_SRC
 * my functions
   #+BEGIN_SRC emacs-lisp
     (defun d/switch-to-minibuffer-window ()
